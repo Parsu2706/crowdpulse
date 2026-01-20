@@ -13,3 +13,5 @@ Thumbs.db
 
 data/
 bert_models/
+/data
+/bert_models
