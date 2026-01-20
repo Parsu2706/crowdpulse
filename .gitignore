@@ -1,0 +1,15 @@
+sentiment_analysis/
+.env
+__pycache__/
+*.pyc
+
+mlruns/
+mlflow.db
+mlartifacts/
+
+
+.DS_Store
+Thumbs.db
+
+data/
+bert_models/
