@@ -1,6 +1,0 @@
-outs:
-- md5: 5674507957a78725670c53baaded4124.dir
-  size: 1876143281
-  nfiles: 36
-  hash: md5
-  path: bert_models
