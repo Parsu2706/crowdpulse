@@ -1,36 +1,24 @@
-import pandas as pd
-import numpy as np
-import torch
+import pandas as pd 
+import numpy as np 
+from fastopic import FASTopic
+from topmost import Preprocess
 
-from topic_modeling.model_loader import load_topic_model
-from topic_modeling.config import random_state
-
-torch.manual_seed(random_state)
-np.random.seed(random_state)
-
-
-def run_inference(texts: list[str], n_words: int = 10):
-    model = load_topic_model()
-
-    doc_topic_dist = model.transform(texts)
-    if isinstance(doc_topic_dist, list):
-        doc_topic_dist = np.array(doc_topic_dist)
-
-    topics = doc_topic_dist.argmax(axis=1)
-    top_words = model.get_top_words()
-    topic_keywords = {}
-
-    for topic_id, topic_words in enumerate(top_words):
-        if isinstance(topic_words, str):
-            words = topic_words.split()
-        else:
-            words = list(topic_words)
-
-        topic_keywords[topic_id] = words[:n_words]
-
-    df = pd.DataFrame({
-        "text": texts,
-        "topic": topics,
+def train_and_infer(text:list[str] , n_words = 10): 
+    clean_texts = [t for t in text if isinstance(t , str) and len(t.strip())  > 10]
+    if len(clean_texts) < 5 : 
+        raise ValueError("samll text")
+    
+    preprocess = Preprocess()
+    model = FASTopic(num_topics=15 , preprocess=preprocess , verbose=False)
+    _ , topics = model.fit_transform(clean_texts)
+    topics = np.argmax(topics , axis=1)
+    keywords = {}
+    for topic_id in set(topics): 
+        words_probs = model.get_topic(topic_id)
+        keywords[topic_id] = [word for word , _ in words_probs[:n_words]]
+    results_df = pd.DataFrame({
+        "text": clean_texts,
+        "topic": topics
     })
-
-    return df, topic_keywords
+    
+    return results_df, keywords
