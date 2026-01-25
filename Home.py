@@ -1,35 +1,33 @@
 import streamlit as st
 import pandas as pd
-import subprocess
 import os
 from datetime import datetime
 from utils.data_fetch import run_scrapper
 from config.paths import REDDIT_CSV
 
+
 st.set_page_config(page_title="CrowdPulse", layout="wide")
+
 
 
 DATA_FILE = "data/raw/reddit_latest.csv"
 SUBREDDIT_FILE = "config/subreddits.txt"
 
-def load_subreddits(): 
+def load_subs_from_txt(): 
     if not os.path.exists(SUBREDDIT_FILE): 
         return []
     with open(SUBREDDIT_FILE , "r") as f : 
         return [line.strip() for line in f if line.strip()]
     
-def save_subreddits(sub): 
+def save_subs_to_txt(sub): 
     os.makedirs(os.path.dirname(SUBREDDIT_FILE) , exist_ok=True)
     with open(SUBREDDIT_FILE , "w") as f : 
         f.write("\n".join(sorted(set(sub))))
 
 st.title("CrowdPulse")
-st.caption("Reddit topic modeling & sentiment analysis dashboard")
-st.markdown("""
-- **What people are talking about**
-- **How they feel**
-- **High-level summaries**
-""")
+st.caption("See what Reddit is talking about — trends, topics, and sentiment in one place" )
+
+st.divider()
 
 if st.sidebar.button("Fetch New Data"):
     with st.spinner("Fetching Reddit data..."):
@@ -42,49 +40,45 @@ if st.sidebar.button("Fetch New Data"):
 
 st.divider()
 
-st.subheader("Data Overview")
+st.subheader("New Data Overview")
 
 if os.path.exists(DATA_FILE): 
     try:
         df = pd.read_csv(DATA_FILE)
         new_data = datetime.fromtimestamp(os.path.getmtime(DATA_FILE)).strftime("%Y-%m-%d")
-        col1 , col2 , col3 = st.columns(3)
-        col1.metric("Posts" , len(df))
-        col2.metric("Subreddits", df["subreddit"].nunique())
-        col3.metric("Last updated", new_data)
+        column1 , column2 , column3 = st.columns(3)
+        column1.metric("Posts" , len(df))
+        column2.metric("Subreddits", df["subreddit"].nunique())
+        column3.metric("Last updated", new_data)
     except Exception as e:
-        st.error(f"Failed to load processed data: {e}")
+        st.error(f"🔴 data loading  error 🔴")
         st.stop()
 else:
-    st.warning("No processed data found. Fetch data to get started.")
+    st.warning("🔴 data loading error 🔴")
 
 st.divider()
 
-    
-st.subheader("All Subreddit")
-current = load_subreddits()
-if current: 
-    with st.container(border=True , ): 
-        st.write(", ".join(current))
-else: 
-    st.info("No subreddits configured")
-
+allcurrent_subs = load_subs_from_txt()
+if allcurrent_subs is None: 
+    st.warning("Error occur because no subreddit available , Please add some subreddits")
 
 st.subheader("Manage subreddits")
-new_subreddits = st.text_input("Add subreddits (comma-separated)",placeholder="datascience, machinelearning")
+col1 , col2 = st.columns(2)
+with col1: 
+    add_subreddit = st.text_input("Add subreddits",placeholder="datascience")
 
-if st.button("Add Subreddits"): 
-    added = [s.strip().lower().replace("r/", "") for s in new_subreddits.split(",") if s.strip()]
-    save_subreddits(current + added)
-    st.success("Subreddits added")
-    st.rerun()
-
-if current: 
-    remove = st.multiselect("Remove subreddits" , current)
-    if st.button("Remove selected"): 
-        remaining = [s for s in current if s not in remove]
-        save_subreddits(remaining)
-        st.success("Subreddits removed")
+    if st.button("Add Subreddits"): 
+        addedsubs = [s.strip().lower().replace("r/", "") for s in add_subreddit.split(",") if s.strip()]
+        save_subs_to_txt(allcurrent_subs + addedsubs)
+        st.success("Subreddits added ✅")
         st.rerun()
+with col2:
+    if allcurrent_subs: 
+        removeSubreddits = st.multiselect("Remove subreddits" , allcurrent_subs)
+        if st.button("Remove selected Subreddits "): 
+            remaining = [s for s in allcurrent_subs if s not in removeSubreddits]
+            save_subs_to_txt(remaining)
+            st.success("Subreddits removed ✅")
+            st.rerun()
 
 
