@@ -11,4 +11,4 @@ plotly
 python-dotenv
 tqdm
 requests
-pyyaml>=6.0
+pyyaml==6.0.1
