@@ -25,7 +25,7 @@ def save_subs_to_txt(sub):
         f.write("\n".join(sorted(set(sub))))
 
 st.title("CrowdPulse")
-st.caption("See what Reddit is talking about — trends, topics, and sentiment in one place" )
+st.caption("trends, topics, and sentiment in one place" )
 
 st.divider()
 
@@ -37,8 +37,6 @@ if st.sidebar.button("Fetch New Data"):
             st.session_state.fetch_status = "success"
         except Exception as e : 
             st.session_state.fetch_status = f"error:{e}"
-
-st.divider()
 
 st.subheader("New Data Overview")
 
