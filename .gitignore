@@ -22,3 +22,5 @@ bert_models/
 
 .DS_Store
 Thumbs.db
+
+*.ipynb
