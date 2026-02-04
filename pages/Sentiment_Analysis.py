@@ -16,7 +16,7 @@ st.session_state.setdefault(DF_NEWS_TOPICS, None)
 
 st.title("Sentiment Analysis")
 st.sidebar.caption("Toggle between Reddit and News data")
-toggle_bet_reddit_news = st.sidebar.toggle("Show Reddit Analysis" , value = True)
+toggle_bet_reddit_news = st.sidebar.toggle("Show Reddit Analysis" , value = True ,  key="reddit_news_toggle")
 
 if toggle_bet_reddit_news: 
     st.subheader("Reddit Sentiment Analysis")
@@ -34,28 +34,36 @@ if toggle_bet_reddit_news:
     with tab1:
         subreddits = load_subreddits()
         selected_subs = st.multiselect("Pick subreddit to analyze" , options=subreddits )
-        if not selected_subs: 
-            st.warning("Select at least one subreddit")
-        elif st.session_state[DF_REDDIT_TOPICS] is None and st.button("Run Sentiment"):
+
+
+        if st.button("Run Sentiment"  ,  key="reddit_sentiment_button"):
+            if not selected_subs: 
+                st.warning("Select at least one subreddit")
+                st.stop()
+            
             with st.spinner("Running Sentiment Analysis.."): 
                 filtered = df_raw[df_raw['subreddit'].isin(selected_subs)]
                 texts = filtered["model_text"].tolist()
                 df_with_sentiment = run_sentiment(texts)
                 df_with_sentiment['subreddit'] = filtered["subreddit"].values
                 df_with_sentiment['text'] = filtered['model_text'].values
-                st.session_state[DF_REDDIT_TOPICS] = df_with_sentiment.copy()
+                st.session_state[DF_REDDIT_TOPICS] = df_with_sentiment
             st.success("Finished")
         st.divider()
 
-        df_with_sentiment = st.session_state[DF_REDDIT_TOPICS]
+        df_with_sentiment = st.session_state.get(DF_REDDIT_TOPICS)
+
         if df_with_sentiment is None:
             st.info("Run Sentiment analysis first")
-        else:
-            cols = st.columns(3)
-            for col, label in zip(cols, ["POSITIVE", "NEGATIVE", "NEUTRAL"]):
-                col.metric(
-                    f"{label} Avg Confidence",
-                    f"{cal_avg(df_with_sentiment, label):.3f}"
+            st.stop()
+
+        df_with_sentiment = df_with_sentiment.copy()
+        
+        cols = st.columns(3)
+        for col, label in zip(cols, ["POSITIVE", "NEGATIVE", "NEUTRAL"]):
+            col.metric(
+                f"{label} Avg Confidence",
+                f"{cal_avg(df_with_sentiment, label):.3f}"
                 )
             st.subheader("Top High confidence Posts")
             top_posts = (df_with_sentiment.sort_values("confidence" , ascending = False).groupby("label" , as_index = False).head(5))
@@ -63,7 +71,12 @@ if toggle_bet_reddit_news:
         
     with tab2: 
   
-        df = st.session_state[DF_REDDIT_TOPICS]
+        df = st.session_state.get(DF_REDDIT_TOPICS)
+
+        if df is None:
+            st.info("Run Sentiment analysis first")
+            st.stop()
+        df = df.copy()        
         if df is not None: 
             subs = sorted(df['subreddit'].unique())
             selected = st.multiselect("Filter by Subreddit" , subs , default=subs)
@@ -75,7 +88,14 @@ if toggle_bet_reddit_news:
     with tab3: 
 
         
-        df = st.session_state[DF_REDDIT_TOPICS]
+        df = st.session_state.get(DF_REDDIT_TOPICS)
+
+        if df is None:
+            st.info("Run Sentiment analysis first")
+            st.stop()
+
+        df = df.copy()     
+
         if df is not None: 
             sentiments = st.multiselect("Filter by sentiment" , sorted(df['label'].unique()))
             if sentiments : 
@@ -97,16 +117,21 @@ else:
     df_raw = df_raw.drop_duplicates("model_text")
 
     with tab1: 
-        if st.session_state[DF_NEWS_TOPICS] is None and st.button("Run Sentiment on News"):
+        if st.button("Run Sentiment" , key='news_sentiment_button'):
             with st.spinner("Running Sentiment analysis.."): 
                     
                 texts = df_raw["model_text"].tolist()
                 df_sent_news = run_sentiment(texts)
                 df_sent_news['text'] = df_raw["model_text"].values
-                st.session_state[DF_NEWS_TOPICS] = df_sent_news.copy()
+                st.session_state[DF_NEWS_TOPICS] = df_sent_news
             st.success("Finished")
 
-        df = st.session_state[DF_NEWS_TOPICS]
+        df = st.session_state.get(DF_NEWS_TOPICS)
+
+        if df is None:
+            st.info("Run Sentiment analysis first")
+            st.stop()
+        df = df.copy()
         if df is None: 
             st.info("Run sentiment analysis first")
         else:  
@@ -118,16 +143,26 @@ else:
                 )
 
     with tab2: 
+        
+        df = st.session_state.get(DF_NEWS_TOPICS)
+        if df is None:
+            st.info("Run Sentiment analysis first")
+            st.stop()
 
-        df = st.session_state[DF_NEWS_TOPICS]
+        df = df.copy()
         if df is not None: 
             st.bar_chart(df['label'].value_counts())
             fig = px.pie(df , names="label" , title="News Sentiment Distribution")
             st.plotly_chart(fig , use_container_width=True)
 
     with tab3: 
-   
-        df = st.session_state[DF_NEWS_TOPICS]
+        df = st.session_state.get(DF_NEWS_TOPICS)
+
+        if df is None:
+            st.info("Run Sentiment analysis first")
+            st.stop()
+        df = df.copy()
+
         if df is not None:
             df['text_preview'] = df['text'].str[:300]
 
