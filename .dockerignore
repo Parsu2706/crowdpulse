@@ -1,0 +1,59 @@
+# Git
+.git/
+.gitignore
+.github/
+
+# Environment / secrets — pass these in via env_file / -e at runtime, never bake into the image
+.env
+.env.local
+.env.production
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+venv/
+.venv/
+env/
+ENV/
+build/
+dist/
+
+# Testing / linting
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+.tox/
+.coverage
+tests/
+
+# Data — mounted as volumes at runtime, not needed in the image itself
+data/raw/
+data/processed/
+data/metrics/
+data/snapshots/
+
+# Fine-tuned model weights — mounted as a volume (see docker-compose.yml), not baked into the image
+models/sentiment_model/
+
+# DVC
+.dvc/cache/
+.dvc/tmp/
+
+# Docs / non-runtime files
+README.md
+*.md
+docs/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Misc export/debug artifacts
+root_combined.txt
+backend_combined.txt
+backend_combine.py
