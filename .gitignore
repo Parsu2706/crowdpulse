@@ -1,0 +1,65 @@
+# Environment / secrets
+.env
+.env.local
+.env.production
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+*.egg
+venv/
+.venv/
+env/
+ENV/
+build/
+dist/
+
+# Jupyter / IPython
+.ipynb_checkpoints/
+
+# Testing / linting caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+.tox/
+.coverage
+
+# Fine-tuned model weights (large — don't commit)
+models/sentiment_model/
+
+# Scraped / processed data (regenerate via scrape or DVC instead of committing)
+data/raw/
+data/processed/
+data/metrics/
+
+# Daily snapshots (can grow large over time; remove this line if you want to track history in git)
+data/snapshots/
+
+# DVC
+.dvc/cache/
+.dvc/tmp/
+.dvc/config.local
+
+# Databases
+*.db
+test.db
+prod.db
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Docker
+docker-compose.override.yml
+
+# Node (if any frontend tooling gets added later)
+node_modules/
+
+# Your own export script's output
+root_combined.txt
+backend_combined.txt
