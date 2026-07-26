@@ -1,0 +1,67 @@
+stages:
+  scrape:
+    cms: python -m backend.scrapers.news_scraper && python -m backend.scrapers.reddit_scraper
+    deps:
+      - backend/scrapers/news_scraper.py
+      - backend/scrapers/reddit_scraper.py
+      - backend/config.py
+    outs:
+      - data/raw/news_latest.csv
+      - data/raw/reddit_latest.csv
+    
+    desc: "Fetch latest news articles and Reddit posts, save as CSVs"
+
+  label_sentiment:
+    cmd: python scripts/run_sentiment_labelling.py
+    deps:
+      - scripts/run_sentiment_labelling.py
+      - backend/services/sentiment.py
+      - models/sentiment_model/
+      - data/raw/news_latest.csv
+      - data/raw/reddit_latest.csv
+    
+    outs:
+      - data/processed/news_labelled.csv
+      - data/processed/reddit_labelled.csv
+    desc: "Run fine tuned sentiment model over scraped CSVs, save labelled versions"
+
+  topic_model:
+    cmd: python scripts/run_topic_model.py
+    deps:
+      - scripts/run_topic_model.py
+      - backend/services/topics.py
+      - data/processed/news_labelled.csv
+      - data/processed/reddit_labelled.csv
+
+    outs:
+      - data/processed/topic_assignments.csv
+      - data/processed/topic_keywords.json
+    metrics:
+      - data/metrics/topic_metrics.json:
+        cache: False
+    desc: "Train BERTopic on combined corpus, save assignment and keywords"
+  
+  extract_entities:
+    cmd: python scripts/run_entity_extraction.py
+    deps:
+      - scripts/run_entity_extraction.py
+      - backend/services/entities.py
+      - data/processed/news_labelled.csv
+      - data/processed/reddit_labelled.csv
+    outs:
+      - data/processed/entities.json
+    desc: "Extract named entities from both sources using spaCy"
+  
+  snapshot:
+    cmd: python scripts/run_snapshot.py
+    deps:
+      - scripts/run_snapshot.py
+      - backend/services/snapshot.py
+      - data/processed/topic_assignments.csv
+      - data/processed/topic_keywords.json
+      - data/processed/entities.json
+      - data/processed/news_labelled.csv
+      - data/processed/reddit_labelled.csv
+    outs:
+      - data/snapshots/
+    desc: "Persist daily snapshot JSON for the Timeline feature"

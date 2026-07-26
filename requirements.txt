@@ -1,0 +1,41 @@
+# Web framework
+fastapi==0.111.0
+uvicorn[standard]==0.30.0
+pydantic==2.7.4
+pydantic-settings==2.3.4
+python-dotenv==1.0.1
+
+# HTTP
+requests==2.32.3
+
+# Data
+pandas>=2.0.0
+numpy>=1.22.4,<2.0.0
+
+# NLP
+spacy>=3.7.0
+sentence-transformers>=3.0.0
+transformers>=4.41.0
+torch>=2.2.0
+
+# Topic modeling
+bertopic>=0.16.0
+
+# AI - Groq replaces Gemini
+groq
+
+# News scraping - RSS replaces NewsData.io API
+feedparser
+
+# Reddit
+praw==7.7.1
+
+# Cache
+redis>=5.0.0
+
+# Scheduler
+apscheduler>=3.10.0
+
+# Frontend
+streamlit>=1.35.0
+plotly>=5.18.0

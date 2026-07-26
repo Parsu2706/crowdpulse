@@ -1,0 +1,93 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: crowdpulse_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD" , "redis-cli" , "ping"]
+      interval: 10s
+      timeout: 5s
+      retried: 5
+    volumes:
+      - redis_data:/data
+  
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: crowdpulse_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+      
+    volumes:
+      - ./data:/app/data
+      # Mount models dir so your fine-tuned sentiment model is available
+      - ./models:/app/models
+    
+    healthcheck:
+      test: ["CMD" , "python" , "-c" , 
+             "import requests; requests.get('http://localhost:8000/health', timeout=5).raise_for_status()"]
+      interval: 30s 
+      timeout: 10s
+      start_period: 90s
+      retries: 3
+
+    
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: crowdpulse_scheduler
+    restart: unless-stopped
+    command: ["python", "scheduler.py"]
+    env_file:
+      - .env
+    environment:
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./scheduler.py:/app/scheduler.py
+    
+  frontend:
+    image: python:3.11-slim
+    container_name: crowdpulse_frontend
+    restart: unless-stopped
+    working_dir: /app
+    command: >
+      bash -c "pip install --quiet streamlit plotly requests pandas &&
+               streamlit run frontend/app.py
+               --server.port=8501
+               --server.address=0.0.0.0
+               --server.headless=true"
+    ports:
+      - "8501:8501"
+    environment:
+      CROWDPULSE_API_URL: http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    volumes:
+      - ./frontend:/app/frontend
+    
+  
+volumes:
+  redis_data:
+  
